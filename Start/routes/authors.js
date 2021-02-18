@@ -13,18 +13,24 @@ Book = mongoose.model('Book');
 	TODO: 9 - Filtering: QueryString variabele: country
 	TODO: 10 - Filtering: QueryString variabele: fullName
 */
-function getAuthors(req, res){
+function getAuthors(req, res) {
 	var query = {};
-	if(req.params.id){
-		query._id = req.params.id;
-	} 
+	var options = { limit: 2 };
 
-	var result = Author.find(query);
+	// Filtering
+	if (req.params.id) { query._id = req.params.id; }
+	if (req.query.country) { query.Country = req.query.country; }
+
+	// Pagination
+	if (req.query.skip) { options.skip = Number(req.query.skip); }
+	if (req.query.limit) { options.limit = Number(req.query.limit); }
+
+	var result = Author.find(query).setOptions(options).byFullName(req.query.fullName).populate("Books");
 
 	result
 		.then(data => {
 			// We hebben gezocht op id, dus we gaan geen array teruggeven.
-			if(req.params.id){
+			if (req.params.id) {
 				data = data[0];
 			}
 			return res.json(data);
@@ -32,7 +38,7 @@ function getAuthors(req, res){
 		.catch(err => handleError(req, res, 500, err));
 }
 
-function addAuthor(req, res){
+function addAuthor(req, res) {
 	var author = new Author(req.body);
 	author
 		.save()
@@ -51,7 +57,7 @@ function addAuthor(req, res){
 		- Author met nieuw book teruggeven
 		- Mocht iets van dit mis gaan dan handleError(req, res, statusCode, err) aanroepen
 */
-function addBook(req, res){
+function addBook(req, res) {
 	res.json({});
 }
 
@@ -63,7 +69,7 @@ function addBook(req, res){
 		- Author zonder betreffende book teruggeven
 		- Mocht iets van dit mis gaan dan handleError(req, res, statusCode, err) aanroepen
 */
-function deleteBook(req, res){
+function deleteBook(req, res) {
 	res.json({});
 }
 
@@ -82,9 +88,9 @@ router.route('/:id/books/:bookId')
 	.delete(deleteBook);
 
 // Export
-module.exports = function (errCallback){
+module.exports = function (errCallback) {
 	console.log('Initializing authors routing module');
-	
+
 	handleError = errCallback;
 	return router;
 };
